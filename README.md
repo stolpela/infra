@@ -26,6 +26,7 @@ nix/
     common.nix    # shared config for all hosts
     forgejo.nix   # git and container reg
     k3s.nix       # k3s
+    nfs.nix       # NFS client mounts
     vlans.nix     # VLAN
 ```
 
@@ -232,6 +233,49 @@ Caddy merges virtual hosts from all modules, so you can add entries alongside ex
 ```bash
 cd /tmp && sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lock-file
 ```
+
+## Adding an NFS mount
+
+### 1. Register the NFS module
+
+Make sure `./nix/modules/nfs.nix` is in the host's `modules` list in `flake.nix` (already done for `nix-k3s-01`).
+
+### 2. Add the mount in the host config
+
+In `nix/hosts/<hostname>/configuration.nix`:
+
+```nix
+nfs = {
+  enable = true;
+  mounts."/mnt/s1/media" = {
+    device = "nas.9rv.org:/mnt/s1/data/media";
+    # options default to [ "nfsvers=4" "soft" "timeo=15" ]
+  };
+};
+```
+
+To add more mounts, add more entries under `mounts`:
+
+```nix
+nfs = {
+  enable = true;
+  mounts."/mnt/s1/media" = {
+    device = "nas.9rv.org:/mnt/s1/data/media";
+  };
+  mounts."/mnt/s1/backups" = {
+    device = "nas.9rv.org:/mnt/s1/data/backups";
+    options = [ "nfsvers=4" "soft" "timeo=15" "ro" ];  # read-only example
+  };
+};
+```
+
+### 3. Deploy
+
+```bash
+cd /tmp && sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lock-file
+```
+
+Permissions are managed server-side via NFS exports and group membership.
 
 ## Updating the flake lock
 
