@@ -12,7 +12,7 @@ in
 
     serverAddr = lib.mkOption {
       type = lib.types.str;
-      default = "backend.nix-k3s-01.9rv.org";
+      default = "nix-k3s-01.backend.9rv.org";
       description = "address of server";
     };
   };

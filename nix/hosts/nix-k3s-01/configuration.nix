@@ -24,4 +24,18 @@
     role = "server";
   };
 
+  forgejo = {
+    enable = true;
+    domain = "git.9rv.org";
+  };
+
+  caddy = {
+    enable = true;
+    virtualHosts = {
+      "git.9rv.org" = {
+        reverseProxy = "localhost:3000";
+      };
+    };
+  };
+
 }

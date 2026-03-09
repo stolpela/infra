@@ -10,6 +10,6 @@
 
   k3s = {
     role = "agent";
-    serverAddr = "backend.nix-k3s-01.9rv.org";
+    serverAddr = "nix-k3s-01.backend.9rv.org";
   };
 }
