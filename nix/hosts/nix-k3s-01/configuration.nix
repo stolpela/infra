@@ -29,6 +29,14 @@
     domain = "git.9rv.org";
   };
 
+  nfs = {
+    enable = true;
+    mounts."/mnt/s1/media" = {
+      device = "nas.9rv.org:/mnt/s1/data/media";
+      options = [ "nfsvers=4" "soft" "timeo=15" ];
+    };
+  };
+
   caddy = {
     enable = true;
     virtualHosts = {

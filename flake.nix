@@ -22,6 +22,7 @@
           ./nix/modules/k3s.nix
           ./nix/modules/vlans.nix
           ./nix/modules/forgejo.nix
+          ./nix/modules/nfs.nix
           ./nix/modules/caddy.nix
         ];
       };
