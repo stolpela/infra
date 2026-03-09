@@ -25,9 +25,11 @@ in
 
       virtualHosts = lib.mapAttrs (domain: hostCfg: {
         extraConfig = "reverse_proxy ${hostCfg.reverseProxy}";
-      }) cfg.virtualHosts;
+      }) (lib.mapAttrs' (domain: hostCfg:
+        lib.nameValuePair "http://${domain}" hostCfg
+      ) cfg.virtualHosts);
     };
 
-    networking.firewall.allowedTCPPorts = [ 80 443 ];
+    networking.firewall.allowedTCPPorts = [ 80 ];
   };
 }
