@@ -3,6 +3,7 @@
 {
   age = {
     identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    ageBin = "${pkgs.age}/bin/age";
 
     secrets = {
       k3s_token.file = ../../secrets/k3s_token.age;
