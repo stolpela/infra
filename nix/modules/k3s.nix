@@ -29,16 +29,12 @@ in
       enable = true;
       role = cfg.role;
       tokenFile = "/etc/secrets/k3s_token";
+      serverAddr = lib.mkIf (cfg.role == "agent") "https://${cfg.serverAddr}:6443";
 
-      extraFlags = builtins.concatStringsSep " " (
-        [
-          "--disable=traefik"
-          "--disable=servicelb"
-        ]
-        ++ lib.optionals (cfg.role == "agent") [
-          "--server=https://${cfg.serverAddr}:6443"
-        ]
-      );
+      extraFlags = builtins.concatStringsSep " " [
+        "--disable=traefik"
+        "--disable=servicelb"
+      ];
     };
   };
 }
