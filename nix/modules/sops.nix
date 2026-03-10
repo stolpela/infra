@@ -1,18 +1,17 @@
 { config, lib, pkgs, ... }:
 
 {
-  sops = {
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    defaultSopsFormat = "yaml";
-
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+  age = {
+    identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
     secrets = {
-      k3s_token = {};
+      k3s_token.file = ../../secrets/k3s_token.age;
       cloudflare_api_token_9rv = {
+        file = ../../secrets/cloudflare_api_token_9rv.age;
         owner = "caddy";
       };
       cloudflare_api_token_larsolo = {
+        file = ../../secrets/cloudflare_api_token_larsolo.age;
         owner = "caddy";
       };
     };

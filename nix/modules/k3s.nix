@@ -25,15 +25,10 @@ in
 
     networking.firewall.allowedUDPPorts = [ 8472 ];
 
-    systemd.services.k3s = {
-      after = [ "sops-nix.service" ];
-      wants = [ "sops-nix.service" ];
-    };
-
     services.k3s = {
       enable = true;
       role = cfg.role;
-      tokenFile = config.sops.secrets.k3s_token.path;
+      tokenFile = config.age.secrets.k3s_token.path;
 
       extraFlags = builtins.concatStringsSep " " (
         [
