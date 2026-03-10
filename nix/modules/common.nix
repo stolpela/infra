@@ -7,11 +7,6 @@
   time.timeZone = "Europe/Amsterdam";
   i18n.defaultLocale = "en_US.UTF-8";
 
-  boot.loader.grub = {
-    enable = lib.mkDefault true;
-    device = lib.mkDefault "/dev/vda";
-  };
-
   networking.firewall.enable = true;
 
   services.openssh = {

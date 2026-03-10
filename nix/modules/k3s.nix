@@ -28,7 +28,7 @@ in
     services.k3s = {
       enable = true;
       role = cfg.role;
-      tokenFile = "/etc/k3s/token";
+      tokenFile = config.sops.secrets.k3s_token.path;
 
       extraFlags = builtins.concatStringsSep " " (
         [

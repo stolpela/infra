@@ -13,6 +13,9 @@ NixOS-based k3s cluster running on Proxmox, managed as a Nix flake.
 
 ```
 flake.nix
+.sops.yaml                    # sops age key config
+secrets/
+  secrets.yaml                # encrypted secrets (sops)
 nix/
   hosts/
     nix-k3s-01/
@@ -27,6 +30,7 @@ nix/
     forgejo.nix   # git and container reg
     k3s.nix       # k3s
     nfs.nix       # NFS client mounts
+    sops.nix      # secrets (sops-nix)
     vlans.nix     # VLAN
 ```
 
@@ -41,24 +45,28 @@ sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lo
 ### 1. Create the VM in Proxmox
 
 - Download the [NixOS minimal ISO](https://nixos.org/download/) (x86_64-linux)
-- Create a VM in Proxmox, attach the ISO, and boot it
+- Create a VM in Proxmox with **q35 machine type** and **UEFI (OVMF)** BIOS, add a TPM
+- Attach the ISO and boot it
 
 ### 2. Install NixOS
 
 Boot into the ISO. Partition, format, and install:
 
 ```bash
-# GPT + SeaBIOS requires a small BIOS boot partition for GRUB
+# GPT + UEFI: ESP + root partition
 parted /dev/sda -- mklabel gpt
-parted /dev/sda -- mkpart BIOS 1MiB 2MiB       # /dev/sda1 - GRUB BIOS boot
-parted /dev/sda -- set 1 bios_grub on
-parted /dev/sda -- mkpart primary 2MiB 100%     # /dev/sda2 - root
+parted /dev/sda -- mkpart ESP fat32 1MiB 512MiB  # /dev/sda1 - EFI System Partition
+parted /dev/sda -- set 1 esp on
+parted /dev/sda -- mkpart primary 512MiB 100%     # /dev/sda2 - root
 
-# Format root partition
+# Format partitions
+mkfs.fat -F 32 -n boot /dev/sda1
 mkfs.ext4 -L nixos /dev/sda2
 
 # Mount
 mount /dev/disk/by-label/nixos /mnt
+mkdir -p /mnt/boot
+mount /dev/disk/by-label/boot /mnt/boot
 
 # Generate config
 nixos-generate-config --root /mnt
@@ -110,33 +118,70 @@ nix-shell -p git --run "
 cd /tmp && sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lock-file
 ```
 
-### 6. Set up the k3s token
+### 6. Set up secrets (sops-nix)
 
-The token must be placed manually at `/etc/k3s/token` on each node. All nodes must share the same token.
+Secrets are managed with [sops-nix](https://github.com/Mic92/sops-nix). Each host decrypts secrets at activation using its SSH host key (converted to age automatically).
 
-**On the server (nix-k3s-01) — first time only:**
+**Prerequisites:** `sops` and `age` installed on your local machine. `ssh-to-age` available via `nix-shell -p ssh-to-age`.
 
-```bash
-sudo mkdir -p /etc/k3s
-head -c 32 /dev/urandom | base64 | sudo tee /etc/k3s/token
-sudo chmod 600 /etc/k3s/token
-sudo systemctl restart k3s
-```
-
-Save the token value:
+#### Generate your admin age key (once)
 
 ```bash
-sudo cat /etc/k3s/token
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt
 ```
 
-**On each agent — copy the token from the server:**
+Note the public key (`age1...`) from the output.
+
+#### Get each host's age public key
+
+From your local machine:
 
 ```bash
-sudo mkdir -p /etc/k3s
-echo "<token-from-server>" | sudo tee /etc/k3s/token
-sudo chmod 600 /etc/k3s/token
-sudo systemctl restart k3s
+ssh-keyscan nix-k3s-01 2>/dev/null | ssh-to-age
+ssh-keyscan nix-k3s-02-gpu 2>/dev/null | ssh-to-age
 ```
+
+Or on the VM itself:
+
+```bash
+nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'
+```
+
+#### Update `.sops.yaml`
+
+Replace the placeholder `age1xxx...` keys with the real keys:
+
+```yaml
+keys:
+  - &admin age1<your-admin-public-key>
+  - &nix-k3s-01 age1<from-ssh-to-age>
+  - &nix-k3s-02-gpu age1<from-ssh-to-age>
+
+creation_rules:
+  - path_regex: secrets/secrets\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *nix-k3s-01
+          - *nix-k3s-02-gpu
+```
+
+#### Encrypt the secrets file
+
+Fill in the real values, then encrypt in-place:
+
+```bash
+sops -e -i secrets/secrets.yaml
+```
+
+The encrypted file is safe to commit. To edit later:
+
+```bash
+sops secrets/secrets.yaml
+```
+
+This decrypts to your editor and re-encrypts on save.
 
 ### 7. Verify
 
@@ -292,5 +337,5 @@ Then redeploy each host.
 
 - SSH user is `admin` (root login is disabled)
 - SSH key authentication only (password auth disabled)
-- k3s token is managed manually (for now at least)
+- Secrets (k3s token, Cloudflare API token) are managed with sops-nix
 - traefik and servicelb are disabled; using caddy and metallb
