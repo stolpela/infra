@@ -31,7 +31,7 @@
     enable = true;
     mounts."/mnt/s1/media" = {
       device = "nas.9rv.org:/mnt/s1/data/media";
-      options = [ "nfsvers=4" "soft" "timeo=15" ];
+      options = [ "nfsvers=4" "soft" "timeo=15" "x-systemd.automount" "noauto" "x-systemd.idle-timeout=600" ];
     };
   };
 
