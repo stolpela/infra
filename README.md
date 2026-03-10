@@ -115,7 +115,7 @@ nix-shell -p git --run "
 ### 5. Deploy
 
 ```bash
-cd /tmp && sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lock-file
+sudo nixos-rebuild switch --flake github:stolpela/infra#<hostname> --no-write-lock-file
 ```
 
 ### 6. Set up secrets (sops-nix)
