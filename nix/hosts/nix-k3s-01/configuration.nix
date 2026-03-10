@@ -4,10 +4,8 @@
 {
   imports = [ ./hardware-configuration.nix ];
 
-  boot.loader.grub = {
-    enable = true;
-    device = "/dev/sda";
-  };
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "nix-k3s-01";
 
