@@ -20,7 +20,6 @@
         modules = [
           ./nix/hosts/nix-k3s-01/configuration.nix
           ./nix/modules/common.nix
-          ./nix/modules/secrets.nix
           ./nix/modules/k3s.nix
           ./nix/modules/vlans.nix
           ./nix/modules/forgejo.nix
@@ -34,7 +33,6 @@
         modules = [
           ./nix/hosts/nix-k3s-02-gpu/configuration.nix
           ./nix/modules/common.nix
-          ./nix/modules/secrets.nix
           ./nix/modules/k3s.nix
         ];
       };
