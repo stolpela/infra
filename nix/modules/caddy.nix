@@ -20,6 +20,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    systemd.services.caddy = {
+      after = [ "sops-nix.service" ];
+      wants = [ "sops-nix.service" ];
+    };
+
     services.caddy = {
       enable = true;
 

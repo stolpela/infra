@@ -25,6 +25,11 @@ in
 
     networking.firewall.allowedUDPPorts = [ 8472 ];
 
+    systemd.services.k3s = {
+      after = [ "sops-nix.service" ];
+      wants = [ "sops-nix.service" ];
+    };
+
     services.k3s = {
       enable = true;
       role = cfg.role;
