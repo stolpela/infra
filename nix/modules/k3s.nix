@@ -25,6 +25,8 @@ in
 
     networking.firewall.allowedUDPPorts = [ 8472 ];
 
+    environment.variables.KUBECONFIG = lib.mkIf (cfg.role == "server") "/etc/rancher/k3s/k3s.yaml";
+
     services.k3s = {
       enable = true;
       role = cfg.role;
