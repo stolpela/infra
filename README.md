@@ -6,6 +6,8 @@ NixOS-based k3s cluster running on Proxmox, managed as a Nix flake.
 
 | Host | Role | Network |
 |------|------|---------|
+| `nix-pi-01` | main services, HA | VLAN 2 (backend) | # planned
+| `nix-pi-02` | main services, HA | VLAN 2 (backend) | # planned
 | `nix-k3s-01` | k3s server | VLAN 2 (backend), VLAN 3 (vpn1), VLAN 4 (vpn2) |
 | `nix-k3s-02-gpu` | k3s agent (Intel Arc GPU) | VLAN 2 (backend) |
 
